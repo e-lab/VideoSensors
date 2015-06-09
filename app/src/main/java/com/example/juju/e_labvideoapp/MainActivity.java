@@ -5,10 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -54,8 +58,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private ImageButton capture;
     private Context myContext;
     private FrameLayout cameraPreview;
-
-
+    int quality = 0;
+    int rate = 1000;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,7 +79,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         capture = (ImageButton) findViewById(R.id.button_capture);
         capture.setOnClickListener(captureListener);
+
     }
+
 
     private int findBackFacingCamera() {
         int cameraId = -1;
@@ -195,12 +201,18 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+        if(quality == 0)
+            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
+        else if(quality == 1)
+            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_720P));
+        else if(quality == 2)
+            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
 
-        mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elabs/");
         wallpaperDirectory.mkdirs();
-        mediaRecorder.setOutputFile("/sdcard/elabs/myvideo" + timeStamp + ".mp4");
+        mediaRecorder.setOutputFile("/sdcard/elabs/" + timeStamp + ".mp4");
+        //mediaRecorder.setVideoFrameRate(10);
 
         try {
             mediaRecorder.prepare();
@@ -234,7 +246,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     double longitude_original = 0;
 
     float speed = 0;
-    float distance = 0;
     float dist[] = new float[3];
     PrintWriter writer = null;
 
@@ -272,7 +283,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         longitude_original = original_location.getLongitude();
 
         Timer timer = new Timer();
-        timer.schedule(new SayHello(), 0, 1000);
+        timer.schedule(new SayHello(), 0, rate);
 
     }
 
@@ -320,5 +331,46 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         }
 
+    }
+    String[] options = {"1080","720","480"};
+    String[] options1 = {"5 Hz","10 Hz"};
+
+    public void addQuality(View view){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Pick Quality")
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // The 'which' argument contains the index position
+                        // of the selected item
+                        if(which == 0){
+                            quality = 0;
+                        }
+                        else if (which == 1){
+                            quality = 1;
+                        }
+                        else if (which == 2){
+                            quality = 2;
+                        }
+                    }
+                });
+        builder.show();
+    }
+    public void addRate(View view)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Pick Data Save Rate")
+                .setItems(options1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // The 'which' argument contains the index position
+                        // of the selected item
+                        if(which == 0){
+                            rate = 200 ;
+                        }
+                        else if (which == 1){
+                            rate = 100;
+                        }
+                    }
+                });
+        builder.show();
     }
 }
