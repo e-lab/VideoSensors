@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Context myContext;
     private FrameLayout cameraPreview;
     int quality = 0;
-    int rate = 1000;
+    int rate = 100;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
