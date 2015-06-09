@@ -4,7 +4,7 @@
 App that records video and motion data from an android smartphone simultaneously. 
 
 It can be used to record video and accelerometer, gyroscope, compass, GPS data at the same time.
-At the moment it records the following
+At the moment it records the following data,
 - Latitude
 - Longitude 
 - Speed
