@@ -24,10 +24,12 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -58,6 +60,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private ImageButton capture;
     private Context myContext;
     private FrameLayout cameraPreview;
+    private Chronometer chrono;
     int quality = 0;
     int rate = 100;
     @Override
@@ -71,7 +74,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-
         cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
 
         mPreview = new CameraPreview(myContext, mCamera);
@@ -79,6 +81,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         capture = (ImageButton) findViewById(R.id.button_capture);
         capture.setOnClickListener(captureListener);
+
+        chrono = (Chronometer) findViewById(R.id.chronometer);
 
     }
 
@@ -150,7 +154,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Toast.makeText(MainActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
                 recording = false;
                 //d.exportData();
-
+                chrono.stop();
                 enddata();
 
             } else {
@@ -177,7 +181,9 @@ public class MainActivity extends Activity implements SensorEventListener {
                 mCamera.setParameters(params);
                 //d.beginData();
                 storeData();
+                chrono.setBase(SystemClock.elapsedRealtime());
 
+                chrono.start();
                 recording = true;
             }
         }

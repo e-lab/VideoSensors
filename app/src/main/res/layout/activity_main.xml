@@ -46,5 +46,9 @@
         android:src="@android:drawable/ic_menu_info_details"
         android:text="Add"
          />
-
+    <Chronometer
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chronometer"
+        android:layout_gravity="left|top" />
 </RelativeLayout>
