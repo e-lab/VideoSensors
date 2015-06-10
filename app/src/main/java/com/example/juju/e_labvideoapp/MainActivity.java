@@ -124,7 +124,25 @@ public class MainActivity extends Activity implements SensorEventListener {
         sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
 
 
-        locationListener = new MyLocationListener();
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+
+                latitude  = location.getLatitude();
+                longitude = location.getLongitude();
+
+                if(location.hasSpeed()) {
+                    speed = location.getSpeed();
+                }
+                location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
 
         // Acquire a reference to the system Location Manager
         LM = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
@@ -237,7 +255,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  + ".mp4");
         //mediaRecorder.setVideoFrameRate(10);
-        mediaRecorder.setMaxDuration(60000);
+        //mediaRecorder.setMaxDuration(60000);
 
         try {
             mediaRecorder.prepare();
@@ -410,36 +428,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                     }
                 });
         builder.show();
-    }
-
-    class MyLocationListener implements LocationListener
-    {
-
-        public void onLocationChanged(Location location)
-        {
-            // Called when a new location is found by the network location provider.
-            latitude  = location.getLatitude();
-            longitude = location.getLongitude();
-
-            if(location.hasSpeed()) {
-                speed = location.getSpeed();
-            }
-            location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
-
-
-        }
-
-        public void onProviderDisabled (String provider) {
-            //currentProvider = "";
-        }
-
-        public void onProviderEnabled (String provider) {
-            //currentProvider = provider;
-        }
-
-        public void onStatusChanged (String provider, int status, Bundle extras) {
-            // Nothing yet...
-        }
     }
 
 }
