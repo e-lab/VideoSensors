@@ -63,6 +63,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Chronometer chrono;
     int quality = 0;
     int rate = 100;
+    String timeStampFile;
+
+    LocationListener locationListener;
+    LocationManager LM;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +123,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
 
+
+        locationListener = new MyLocationListener();
+
+        // Acquire a reference to the system Location Manager
+        LM = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+        // Register the listener with the Location Manager to receive location updates
+        LM.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
     }
 
     @Override
@@ -158,6 +170,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                 enddata();
 
             } else {
+                timeStampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/");
+                wallpaperDirectory.mkdirs();
+
+                File wallpaperDirectory1 = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/"+timeStampFile);
+                wallpaperDirectory1.mkdirs();
                 if (!prepareMediaRecorder()) {
                     Toast.makeText(MainActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
                     finish();
@@ -185,6 +203,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                 chrono.start();
                 recording = true;
+
             }
         }
     };
@@ -214,11 +233,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         else if(quality == 2)
             mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elabs/");
-        wallpaperDirectory.mkdirs();
-        mediaRecorder.setOutputFile("/sdcard/elabs/" + timeStamp + ".mp4");
+        //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+        mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  + ".mp4");
         //mediaRecorder.setVideoFrameRate(10);
+        mediaRecorder.setMaxDuration(60000);
 
         try {
             mediaRecorder.prepare();
@@ -250,31 +269,44 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     double latitude_original = 0;
     double longitude_original = 0;
-
+    //float distance = 0;
     float speed = 0;
-    float dist[] = new float[3];
+    float dist[] = {0,0,0};
     PrintWriter writer = null;
+
 
     class SayHello extends TimerTask {
         public void run() {
             lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            longitude = location.getLongitude();
-            latitude = location.getLatitude();
-            speed = location.getSpeed();
-            location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
-            String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
-            writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                    heading + "," + gyro_x + "," + gyro_y + "," + gyro_z );
+            //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, locationListener );
+            //longitude = location.getLongitude();
+            //latitude = location.getLatitude();
+            //if(location.hasSpeed()) {
+              //  speed = location.getSpeed();
+            //}
+            //dist[0] = (float) 0.0;
+
+            if(latitude != 0.0) {
+                //distance = distance + (speed * 1);
+                //location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
+                String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
+                writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
+                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+            }
+            else{
+                String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
+                writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
+                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+
+            }
             //writer.println(currentLatitudeStr +","+currentLongitudeStr + "," + direction + "," + currentSpeedStr + "," + cumulativePhoneKmsStr + "," + time); //cumulativePhoneKms
         }
     }
 
     public void storeData() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elabs_data/");
-        wallpaperDirectory.mkdirs();
-        String filePath = "/sdcard/elabs_data/" + timeStamp + ".csv";
+
+        String filePath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
         try {
             writer = new PrintWriter(filePath);
         } catch (FileNotFoundException e) {
@@ -379,4 +411,35 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
         builder.show();
     }
+
+    class MyLocationListener implements LocationListener
+    {
+
+        public void onLocationChanged(Location location)
+        {
+            // Called when a new location is found by the network location provider.
+            latitude  = location.getLatitude();
+            longitude = location.getLongitude();
+
+            if(location.hasSpeed()) {
+                speed = location.getSpeed();
+            }
+            location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
+
+
+        }
+
+        public void onProviderDisabled (String provider) {
+            //currentProvider = "";
+        }
+
+        public void onProviderEnabled (String provider) {
+            //currentProvider = provider;
+        }
+
+        public void onStatusChanged (String provider, int status, Bundle extras) {
+            // Nothing yet...
+        }
+    }
+
 }
