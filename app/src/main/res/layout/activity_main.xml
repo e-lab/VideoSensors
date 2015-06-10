@@ -20,7 +20,7 @@
         android:padding="20dp"
         android:background="@null"
         android:onClick="addQuality"
-        android:src="@android:drawable/ic_menu_rotate"
+        android:src="@android:drawable/ic_menu_edit"
         android:text="Change quality" />
 
     <ImageButton
