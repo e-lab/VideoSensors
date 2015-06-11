@@ -64,6 +64,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     int quality = 0;
     int rate = 100;
     String timeStampFile;
+    int clickFlag = 0;
+    Timer timer;
+    int VideoFrameRate = 10;
 
     LocationListener locationListener;
     LocationManager LM;
@@ -186,7 +189,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                 //d.exportData();
                 chrono.stop();
                 enddata();
-
+/*
+                if(clickFlag == 1){
+                    clickFlag = 0;
+                    capture.performClick();
+                }
+*/
             } else {
                 timeStampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/");
@@ -202,8 +210,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                 // work on UiThread for better performance
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        // If there are stories, add them to the table
-
                         try {
                             mediaRecorder.start();
                         } catch (final Exception ex) {
@@ -254,8 +260,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
         mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  + ".mp4");
-        //mediaRecorder.setVideoFrameRate(10);
-        //mediaRecorder.setMaxDuration(60000);
+        mediaRecorder.setVideoFrameRate(VideoFrameRate);
+        //mediaRecorder.setMaxDuration(5000);
 
         try {
             mediaRecorder.prepare();
@@ -291,7 +297,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     float speed = 0;
     float dist[] = {0,0,0};
     PrintWriter writer = null;
-
+    long timechecker = 5000;
 
     class SayHello extends TimerTask {
         public void run() {
@@ -304,21 +310,26 @@ public class MainActivity extends Activity implements SensorEventListener {
               //  speed = location.getSpeed();
             //}
             //dist[0] = (float) 0.0;
+            /*
+            long elapsedMillis = SystemClock.elapsedRealtime() - chrono.getBase();
+            if(elapsedMillis >= timechecker){
+                clickFlag = 1;
+                timechecker = timechecker + 5000;
+                timer.cancel();
+                timer.purge();
+            }*/
 
             if(latitude != 0.0) {
-                //distance = distance + (speed * 1);
-                //location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
                         heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
             }
             else{
+                dist[0] = (float) 0.0;
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
                         heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
-
             }
-            //writer.println(currentLatitudeStr +","+currentLongitudeStr + "," + direction + "," + currentSpeedStr + "," + cumulativePhoneKmsStr + "," + time); //cumulativePhoneKms
         }
     }
 
@@ -338,9 +349,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         latitude_original = original_location.getLatitude();
         longitude_original = original_location.getLongitude();
 
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
-
+        /*if(clickFlag == 1) {
+            capture.performClick();
+        }
+        */
     }
 
     public void enddata() {
@@ -429,5 +443,4 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
         builder.show();
     }
-
 }
