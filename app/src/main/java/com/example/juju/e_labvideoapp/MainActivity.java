@@ -411,13 +411,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         String setting = new String();
         if(quality == 0) {
-            setting = "1080";
+            setting = "1080p";
         }
         else if(quality == 1){
-            setting = "720";
+            setting = "720p";
         }
         else if(quality == 2){
-            setting = "480";
+            setting = "480p";
         }
         builder.setTitle("Pick Quality, Current setting: " + setting)
                 .setItems(options, new DialogInterface.OnClickListener() {
