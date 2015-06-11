@@ -4,3 +4,7 @@
 /.idea/libraries
 .DS_Store
 /build
+Tools/frame-extractor/Videos
+Tools/frame-extractor/Data
+Tools/frame-extractor/frames
+Tools/frame-extractor/frame_info
