@@ -54,18 +54,21 @@ io.write('--- Start processing data...\n')
 for nv = 1, #videoList do
     name = videoList[nv]
     io.write('------ Current video folder: ' .. name .. '\n')
-    datafileID = io.open(opt.vd .. name .. '/' .. name .. '.csv', 'r')
-    titles = datafileID:read()
+    -- Make folders within data folders
+    os.execute('mkdir ' .. opt.location .. 'frames/' .. name)
+    os.execute('mkdir ' .. opt.location .. 'frames_info/' .. name)
+    datafile = io.open(opt.vd .. name .. '/' .. name .. '.csv'):lines()
+    titles = datafile(1)
     VideoRead(opt.vd .. name .. '/' .. name .. '.mp4')   -- Read video by libvideo_decoder
     local nb_frames = length                             -- Retrieve video length
     for f = 0, nb_frames do                              -- For every frame
         io.flush()
         dst = torch.ByteTensor(3, height, width)
         video_decoder.frame_rgb(dst)                     -- Get frames
-        image.save(string.format(opt.location .. 'frames/%s-%04d.png', name, f), dst:float()/255.0)
-    	writefileID = io.open(string.format(opt.location .. 'frames_info/%s-%04d.txt', name, f), 'w')
+        image.save(string.format(opt.location .. 'frames/' .. name .. '/%s-%04d.png', name, f), dst:float()/255.0)
+    	writefileID = io.open(string.format(opt.location .. 'frames_info/' .. name .. '/%s-%04d.txt', name, f), 'w')
         writefileID:write(titles .. '\n')
-        writefileID:write(datafileID:read() .. '\n')
+        writefileID:write(datafile(f+2) .. '\n')
         writefileID.close()
         -- Progressbar
         n_sp = math.floor(100*f/nb_frames)
@@ -73,6 +76,5 @@ for nv = 1, #videoList do
     end
     io.write('\n')
     video_decoder.exit()
-    datafileID.close()
 end
 io.write('------ Videos all processed successfully.\n')
