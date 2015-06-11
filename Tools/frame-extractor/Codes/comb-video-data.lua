@@ -1,6 +1,6 @@
 -------------------------------------------------
 -- VideoSensor data extractor -------------------
--- Data extracted from VideoSensors by koolrags--
+-- Data extracted from VideoSensors by Raaghav Karthik (koolrags)--
 -------------------------------------------------
 -- Jarvis Du ------------------------------------
 -- June 9, 2015 ---------------------------------
