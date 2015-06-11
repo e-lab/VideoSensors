@@ -407,7 +407,17 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     public void addQuality(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Pick Quality")
+        String setting = new String();
+        if(quality == 0) {
+            setting = "1080";
+        }
+        else if(quality == 1){
+            setting = "720";
+        }
+        else if(quality == 2){
+            setting = "480";
+        }
+        builder.setTitle("Pick Quality, Current setting: " + setting)
                 .setItems(options, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // The 'which' argument contains the index position
@@ -428,7 +438,14 @@ public class MainActivity extends Activity implements SensorEventListener {
     public void addRate(View view)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Pick Data Save Rate")
+        String setting = new String();
+        if(rate == 100) {
+            setting = "10 Hz";
+        }
+        else if(rate == 200){
+            setting = "5 Hz";
+        }
+        builder.setTitle("Pick Data Save Rate, Current setting: " + setting)
                 .setItems(options1, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // The 'which' argument contains the index position
