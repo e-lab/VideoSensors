@@ -13,9 +13,8 @@ video_decoder = require('libvideo_decoder')
 
 -- Parse args -----------------------------------
 op = xlua.OptionParser('%prog [options]')
-op:option{'-v',        '--v',        action='store',        dest='video',        help='Video folder to process', default='../Videos/'}
-op:option{'-d',        '--data',     action='store',        dest='data',         help='Data folder with all the information', default='../Data/'}
--- op:option{'-l',        '--loc',      action='store',        dest='location',     help=''}
+op:option{'-vd',        '--video_data',        action='store',        dest='vd',            help='Video & data folder to process',            default='../elab/'}
+op:option{'-l',         '--loc',               action='store',        dest='location',      help='Destination folder',                        default='../'}
 opt, args = op:parse()
 
 -- Function definitions ------------------------
@@ -24,13 +23,13 @@ function VideoRead(videoPath)
 end
 
 -- Make files for frames and information -------
-function mkNewfolders()
-    folName = {'frames', 'frame_info'}
+function mkNewfolders(folder)
+    folName = {'frames', 'frames_info'}
     for i = 1, 2 do
-        folOp = io.open('../' .. folName[i])
+        folOp = io.open(folder .. folName[i])
         if (folOp == nil) then
-            print('mkdir ../' .. folName[i])
-            os.execute('mkdir ../' .. folName[i])
+            print('mkdir ' .. folder .. folName[i])
+            os.execute('mkdir ' .. folder .. folName[i])
         end
     end
 end
@@ -41,30 +40,30 @@ function getFilenames(folder)
     i = 0
     for name in io.popen('ls ' .. folder):lines() do
         i = i + 1
-        list[i] = name:split('%.')[1]
+        list[i] = name
     end
     return list
 end
 
 -- Retrieve inputs ------------------------------
-mkNewfolders()
-videoList = getFilenames(opt.video)
+mkNewfolders(opt.location)
+videoList = getFilenames(opt.vd)
+
 -- Process videos -------------------------------
 io.write('--- Start processing data...\n')
 for nv = 1, #videoList do
     name = videoList[nv]
-    io.write('------ Current video name: ' .. name .. '.mp4\n')
-    datafileID = io.open(opt.data .. name .. '.csv', 'r')
+    io.write('------ Current video folder: ' .. name .. '\n')
+    datafileID = io.open(opt.vd .. name .. '/' .. name .. '.csv', 'r')
     titles = datafileID:read()
-    VideoRead(opt.video .. name .. '.mp4')               -- Read video by libvideo_decoder
+    VideoRead(opt.vd .. name .. '/' .. name .. '.mp4')   -- Read video by libvideo_decoder
     local nb_frames = length                             -- Retrieve video length
-    io.flush()
     for f = 0, nb_frames do                              -- For every frame
         io.flush()
         dst = torch.ByteTensor(3, height, width)
         video_decoder.frame_rgb(dst)                     -- Get frames
-        image.save(string.format('../frames/%s-%04d.png', name, f), dst:float()/255.0)
-    	writefileID = io.open(string.format('../frame_info/%s-%04d.txt', name, f), 'w')
+        image.save(string.format(opt.location .. 'frames/%s-%04d.png', name, f), dst:float()/255.0)
+    	writefileID = io.open(string.format(opt.location .. 'frames_info/%s-%04d.txt', name, f), 'w')
         writefileID:write(titles .. '\n')
         writefileID:write(datafileID:read() .. '\n')
         writefileID.close()

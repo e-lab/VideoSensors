@@ -14,12 +14,12 @@ th comb-video-data.lua
 The frame extractor has the following arguments.
 
 ```bash
-th comb-video-data.lua --video --data
+th comb-video-data.lua --video_data --loc
 ```
 
 ```
-video     (default ../Videos/)       Folder containing all the videos to be processed, '/' needed at the end
-data      (default ../Data/)         Folder containing all the data files to be processed, '/' needed at the end
+video     (default ../elab/)       Folder containing all the videos and datafiles to be processed, separated in different folders, and '/' needed at the end
+data      (default ../)            Target folder to save the frame pictures and datafiles, '/' needed at the end
 ```
 
 ## Results 
@@ -27,13 +27,13 @@ data      (default ../Data/)         Folder containing all the data files to be 
 Results of the extractor are saved in 
 
 ```bash
-./frames
+location/frames
 ```
 
 and 
 
 ```bash
-./frame_info
+location/frames_info
 ```
 
-with file names of separate frames.
+with file names of separate frames. `location` is the target folder specified in the arguments as `--loc`.
