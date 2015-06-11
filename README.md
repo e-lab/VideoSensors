@@ -19,7 +19,8 @@ At the moment it records the following data,
 - Gyroscope data - Z axis
 
 
-## Installation Method 1 
+## Installation 
+### Method 1 
 
  - Download Android Studio.
  - Import this repository into Android Studio.
@@ -28,7 +29,7 @@ At the moment it records the following data,
  - Run the app and choose the android deive when prompted.
  - Android Studio will then install the app on the device. 
 
-## Installation Method 2
+### Method 2
 
 - Download the apk file.
 - The name of the file is "app-release-unsigned".
