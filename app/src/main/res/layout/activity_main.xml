@@ -9,6 +9,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1">
+
     </FrameLayout>
 
     <ImageButton
@@ -51,4 +52,15 @@
         android:layout_height="wrap_content"
         android:id="@+id/chronometer"
         android:layout_gravity="left|top" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:id="@+id/imageButton"
+        android:background="@null"
+        android:onClick="addFrameRate"
+        android:src="@android:drawable/ic_menu_manage"
+        android:layout_gravity="right|top" />
 </RelativeLayout>

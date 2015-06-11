@@ -402,8 +402,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
 
     }
-    String[] options = {"1080","720","480"};
+    String[] options = {"1080p","720p","480p"};
     String[] options1 = {"5 Hz","10 Hz"};
+    String[] options2 = {"10 fps","20 fps","30 fps"};
+
 
     public void addQuality(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -455,6 +457,37 @@ public class MainActivity extends Activity implements SensorEventListener {
                         }
                         else if (which == 1){
                             rate = 100;
+                        }
+                    }
+                });
+        builder.show();
+    }
+    public void addFrameRate(View view)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String setting = new String();
+        if(VideoFrameRate == 10) {
+            setting = "10 fps";
+        }
+        else if(VideoFrameRate == 20){
+            setting = "20 fps";
+        }
+        else if(VideoFrameRate == 30){
+            setting = "30 fps";
+        }
+        builder.setTitle("Pick Video fps, Current setting: " + setting)
+                .setItems(options2, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // The 'which' argument contains the index position
+                        // of the selected item
+                        if(which == 0){
+                            VideoFrameRate = 10 ;
+                        }
+                        else if (which == 1){
+                            VideoFrameRate = 20;
+                        }
+                        else if (which == 2){
+                            VideoFrameRate = 30;
                         }
                     }
                 });
