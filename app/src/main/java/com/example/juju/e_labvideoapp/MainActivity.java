@@ -392,7 +392,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             linear_acc_z = event.values[2];
         }
         else if (event.sensor.getType() == Sensor.TYPE_ORIENTATION)
-            heading = event.values[0];
+            heading = event.values[0] + 90;
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
             gyro_x = event.values[0];
             gyro_y = event.values[1];
