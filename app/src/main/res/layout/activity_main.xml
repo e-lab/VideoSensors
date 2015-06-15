@@ -12,6 +12,8 @@
 
     </FrameLayout>
 
+
+
     <ImageButton
         android:id="@+id/button_changeQuality"
         android:layout_width="wrap_content"
@@ -52,7 +54,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/chronometer"
         android:padding="20dp"
-        android:layout_gravity="left|top" />
+        android:layout_gravity="left|top"
+        />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -65,4 +68,16 @@
         android:padding="20dp"
         android:src="@android:drawable/ic_menu_manage"
         android:layout_gravity="right|top" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="5dp"
+        android:layout_alignParentRight="true"
+        android:text="."
+        android:id="@+id/txt1"
+        android:textSize="70dp" />
+
+
 </RelativeLayout>

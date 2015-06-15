@@ -25,6 +25,7 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.telephony.TelephonyManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -61,6 +62,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Context myContext;
     private FrameLayout cameraPreview;
     private Chronometer chrono;
+    private TextView txt;
+
     int quality = 0;
     int rate = 100;
     String timeStampFile;
@@ -90,6 +93,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         capture.setOnClickListener(captureListener);
 
         chrono = (Chronometer) findViewById(R.id.chronometer);
+        txt = (TextView) findViewById(R.id.txt1);
+        txt.setTextColor(-16711936);
 
     }
 
@@ -188,6 +193,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                 recording = false;
                 //d.exportData();
                 chrono.stop();
+                chrono.setBase(SystemClock.elapsedRealtime());
+
+                chrono.start();
+                chrono.stop();
+                txt.setTextColor(-16711936);
+                //chrono.setBackgroundColor(0);
                 enddata();
 /*
                 if(clickFlag == 1){
@@ -218,14 +229,16 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
                 Toast.makeText(MainActivity.this, "Recording...", Toast.LENGTH_LONG).show();
 
-                Camera.Parameters params = mCamera.getParameters();
+                /*Camera.Parameters params = mCamera.getParameters();
                 params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                mCamera.setParameters(params);
+                mCamera.setParameters(params);*/
                 //d.beginData();
                 storeData();
                 chrono.setBase(SystemClock.elapsedRealtime());
 
                 chrono.start();
+                //chrono.setBackgroundColor(-65536);
+                txt.setTextColor(-65536);
                 recording = true;
 
             }
@@ -322,14 +335,15 @@ public class MainActivity extends Activity implements SensorEventListener {
             if(latitude != 0.0) {
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+                        (heading+90) + "," + gyro_x + "," + gyro_y + "," + gyro_z);
             }
             else{
                 dist[0] = (float) 0.0;
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+                        (heading+90) + "," + gyro_x + "," + gyro_y + "," + gyro_z);
             }
+
         }
     }
 
@@ -346,8 +360,10 @@ public class MainActivity extends Activity implements SensorEventListener {
                 + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
         LocationManager original = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location original_location = original.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        latitude_original = original_location.getLatitude();
-        longitude_original = original_location.getLongitude();
+        if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
+            latitude_original = original_location.getLatitude();
+            longitude_original = original_location.getLongitude();
+        }
 
         timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
@@ -392,13 +408,11 @@ public class MainActivity extends Activity implements SensorEventListener {
             linear_acc_z = event.values[2];
         }
         else if (event.sensor.getType() == Sensor.TYPE_ORIENTATION)
-            heading = event.values[0] + 90;
+            heading = event.values[0];
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
             gyro_x = event.values[0];
             gyro_y = event.values[1];
             gyro_z = event.values[2];
-
-
         }
 
     }
