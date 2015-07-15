@@ -32,7 +32,7 @@ At the moment it records the following data,
 ### Method 2
 
 - Download the apk file.
-- The name of the file is "app-release-unsigned".
+- The name of the file is "app-debug.apk".
 - Make sure your phone allows installation of apps from unknown sources.
 - Copy the app to your phone memory.
 - Now on the phone, find the app in phone memory and click on it.
