@@ -58,10 +58,11 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
-    private ImageButton capture;
+    private ImageButton capture, vid;
     private Context myContext;
     private FrameLayout cameraPreview;
     private Chronometer chrono;
+    private TextView tv;
     private TextView txt;
 
     int quality = 0;
@@ -69,7 +70,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     String timeStampFile;
     int clickFlag = 0;
     Timer timer;
-    int VideoFrameRate = 10;
+    int VideoFrameRate = 24;
 
     LocationListener locationListener;
     LocationManager LM;
@@ -95,6 +96,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         chrono = (Chronometer) findViewById(R.id.chronometer);
         txt = (TextView) findViewById(R.id.txt1);
         txt.setTextColor(-16711936);
+
+        vid = (ImageButton) findViewById(R.id.imageButton);
+        vid.setVisibility(View.GONE);
+
+        tv = (TextView) findViewById(R.id.textViewHeading);
+        String setTextText = "Heading: " + heading + " Speed: " + speed;
+        tv.setText(setTextText);
+
 
     }
 
@@ -128,8 +137,9 @@ public class MainActivity extends Activity implements SensorEventListener {
             mPreview.refreshCamera(mCamera);
         }
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
         sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
+
 
 
         locationListener = new LocationListener() {
@@ -229,9 +239,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
                 Toast.makeText(MainActivity.this, "Recording...", Toast.LENGTH_LONG).show();
 
-                /*Camera.Parameters params = mCamera.getParameters();
+                Camera.Parameters params = mCamera.getParameters();
+                params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
+                if ( params.isAutoExposureLockSupported() )
+                    params.setAutoExposureLock( true );
+
                 params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                mCamera.setParameters(params);*/
+                mCamera.setParameters(params);
                 //d.beginData();
                 storeData();
                 chrono.setBase(SystemClock.elapsedRealtime());
@@ -335,14 +349,16 @@ public class MainActivity extends Activity implements SensorEventListener {
             if(latitude != 0.0) {
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        (heading+90) + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
             }
             else{
                 dist[0] = (float) 0.0;
                 String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
                 writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        (heading+90) + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
             }
+
+
 
         }
     }
@@ -364,7 +380,8 @@ public class MainActivity extends Activity implements SensorEventListener {
             latitude_original = original_location.getLatitude();
             longitude_original = original_location.getLongitude();
         }
-
+        String setTextText = "Heading: " + heading + " Speed: " + speed;
+        tv.setText(setTextText);
         timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
         /*if(clickFlag == 1) {
@@ -374,6 +391,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
 
     public void enddata() {
+
         writer.close();
     }
 
@@ -407,17 +425,26 @@ public class MainActivity extends Activity implements SensorEventListener {
             linear_acc_y = event.values[1];
             linear_acc_z = event.values[2];
         }
-        else if (event.sensor.getType() == Sensor.TYPE_ORIENTATION)
-            heading = event.values[0];
+        else if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+            heading = Math.round(event.values[0]);
+            if(heading >= 270){
+                heading = heading + 90;
+                heading = heading - 360;
+            }
+            else{
+                heading = heading + 90;
+            }
+        }
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
             gyro_x = event.values[0];
             gyro_y = event.values[1];
             gyro_z = event.values[2];
         }
-
+        String setTextText = "Heading: " + heading + " Speed: " + speed;
+        tv.setText(setTextText);
     }
     String[] options = {"1080p","720p","480p"};
-    String[] options1 = {"5 Hz","10 Hz"};
+    String[] options1 = {"15 Hz","10 Hz"};
     String[] options2 = {"10 fps","20 fps","30 fps"};
 
 
@@ -458,8 +485,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         if(rate == 100) {
             setting = "10 Hz";
         }
-        else if(rate == 200){
-            setting = "5 Hz";
+        else if(rate == 67){
+            setting = "15 Hz";
         }
         builder.setTitle("Pick Data Save Rate, Current setting: " + setting)
                 .setItems(options1, new DialogInterface.OnClickListener() {
@@ -467,7 +494,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                         // The 'which' argument contains the index position
                         // of the selected item
                         if(which == 0){
-                            rate = 200 ;
+                            rate = 67 ;
                         }
                         else if (which == 1){
                             rate = 100;

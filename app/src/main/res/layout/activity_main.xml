@@ -10,7 +10,9 @@
         android:layout_height="fill_parent"
         android:layout_weight="1">
 
+
     </FrameLayout>
+
 
 
 
@@ -49,13 +51,6 @@
         android:src="@android:drawable/ic_menu_info_details"
         android:text="Add"
          />
-    <Chronometer
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/chronometer"
-        android:padding="20dp"
-        android:layout_gravity="left|top"
-        />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -68,6 +63,29 @@
         android:padding="20dp"
         android:src="@android:drawable/ic_menu_manage"
         android:layout_gravity="right|top" />
+
+    <Chronometer
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chronometer"
+        android:padding="20dp"
+        android:layout_gravity="center_horizontal|top"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:text="Heading and speed"
+        android:id="@+id/textViewHeading"
+        android:padding="20dp"
+        android:layout_gravity="center|top"
+        android:layout_toRightOf="@+id/button_tag"
+        android:layout_toEndOf="@+id/button_tag"
+        android:textSize="20dp"
+        android:textColor="@android:color/primary_text_dark"
+        android:layout_alignParentBottom="true" />
 
     <TextView
         android:layout_width="wrap_content"
