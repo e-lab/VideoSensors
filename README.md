@@ -49,3 +49,6 @@ At the moment it records the following data,
 
 
 
+### License
+
+MIT
