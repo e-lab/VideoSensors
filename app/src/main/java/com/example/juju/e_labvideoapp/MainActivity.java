@@ -81,9 +81,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        //accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        //head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        //gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        rotv = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
 
@@ -100,9 +101,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         vid = (ImageButton) findViewById(R.id.imageButton);
         vid.setVisibility(View.GONE);
 
+        /*
         tv = (TextView) findViewById(R.id.textViewHeading);
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
+        */
 
 
     }
@@ -136,9 +139,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             mCamera = Camera.open(findBackFacingCamera());
             mPreview.refreshCamera(mCamera);
         }
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
-        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
+        //sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, rotv, SensorManager.SENSOR_DELAY_NORMAL);
 
 
 
@@ -217,7 +221,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 }
 */
             } else {
-                timeStampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                timeStampFile = String.valueOf((new Date()).getTime());
                 File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/");
                 wallpaperDirectory.mkdirs();
 
@@ -346,20 +350,14 @@ public class MainActivity extends Activity implements SensorEventListener {
                 timer.purge();
             }*/
 
-            if(latitude != 0.0) {
-                String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
-                writer.println(longitude + "," + latitude + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
-            }
-            else{
-                dist[0] = (float) 0.0;
-                String timeStamp = new SimpleDateFormat("HH-mm-ss").format(new Date());
-                writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                        heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
-            }
-
-
-
+            /*
+            writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
+                    heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
+            */
+            String timeStamp = String.valueOf((new Date()).getTime());
+            writer.println(timeStamp + "," +
+                           longitude_original + "," + latitude_original + "," +
+                           rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy);
         }
     }
 
@@ -372,16 +370,19 @@ public class MainActivity extends Activity implements SensorEventListener {
             e.printStackTrace();
         }
 
-        writer.println("Longitude" + "," + "Latitude" + "," + "Speed" + "," + "Distance" + "," + "Time" + "," + "Acc X" + "," + "Acc Y" + "," + "Acc Z" + "," + "Heading"
-                + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
+        //writer.println("Longitude" + "," + "Latitude" + "," + "Speed" + "," + "Distance" + "," + "Time" + "," + "Acc X" + "," + "Acc Y" + "," + "Acc Z" + "," + "Heading"
+        //        + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
+        writer.println("Timestamp" + "," +
+                       "Longitude" + "," + "Latitude" + "," +
+                       "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc");
         LocationManager original = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location original_location = original.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
             latitude_original = original_location.getLatitude();
             longitude_original = original_location.getLongitude();
         }
-        String setTextText = "Heading: " + heading + " Speed: " + speed;
-        tv.setText(setTextText);
+        //String setTextText = "Heading: " + heading + " Speed: " + speed;
+        //tv.setText(setTextText);
         timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
         /*if(clickFlag == 1) {
@@ -391,7 +392,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
 
     public void enddata() {
-
         writer.close();
     }
 
@@ -400,9 +400,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorManager;
 
-    private Sensor accelerometer;
-    private Sensor head;
-    private Sensor gyro;
+    //private Sensor accelerometer;
+    //private Sensor head;
+    //private Sensor gyro;
+    private Sensor rotv;
+
+    /*
     float linear_acc_x = 0;
     float linear_acc_y = 0;
     float linear_acc_z = 0;
@@ -412,6 +415,13 @@ public class MainActivity extends Activity implements SensorEventListener {
     float gyro_x = 0;
     float gyro_y = 0;
     float gyro_z = 0;
+    */
+
+    float rotv_x = 0;
+    float rotv_y = 0;
+    float rotv_z = 0;
+    float rotv_w = 0;
+    float rotv_accuracy = 0;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -419,7 +429,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
+        if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            rotv_x = event.values[0];
+            rotv_y = event.values[1];
+            rotv_z = event.values[2];
+            rotv_w = event.values[3];
+            rotv_accuracy = event.values[4];
+        }
+        /*
         if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             linear_acc_x = event.values[0];
             linear_acc_y = event.values[1];
@@ -442,6 +459,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
+        */
     }
     String[] options = {"1080p","720p","480p"};
     String[] options1 = {"15 Hz","10 Hz"};
