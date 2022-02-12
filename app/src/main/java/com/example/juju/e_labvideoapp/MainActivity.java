@@ -84,6 +84,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView tv;
     private TextView txt;
 
+    private CamcorderProfile mProfile;
+
     int quality = 0;
     int rate = 100;
     String timeStampFile;
@@ -376,9 +378,23 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Camera.Parameters params = mCamera.getParameters();
 
                 params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
-                if ( params.isAutoExposureLockSupported() )  params.setAutoExposureLock( true );
+                // if ( params.isAutoExposureLockSupported() )params.setAutoExposureLock( true );
 
                 params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+
+                Camera.Size optimalSize = getSafePreviewSize(mCamera.getParameters().getSupportedPreviewSizes(),
+                        mPreview.getWidth(), mPreview.getHeight());
+
+
+                mProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+
+                mProfile.videoFrameWidth = optimalSize.width;
+                mProfile.videoFrameHeight = optimalSize.height;
+
+
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.setPreviewSize(mProfile.videoFrameWidth, mProfile.videoFrameHeight);
+
                 mCamera.setParameters(params);
 
                 if (!prepareMediaRecorder()) {
@@ -412,6 +428,22 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     };
 
+    public static  Camera.Size getSafePreviewSize(List<Camera.Size> sizes,
+                                                  int surfaceWidth, int surfaceHeight) {
+        double minDiff = Double.MAX_VALUE;
+        Integer currentBestFitIndex = 0;
+        int indexCount = 0;
+        for (Camera.Size size : sizes) {
+            double heightDifference = Math.abs(size.height - surfaceHeight);
+            if (heightDifference < minDiff) {
+                currentBestFitIndex = indexCount;
+                minDiff = heightDifference;
+            }
+            indexCount++;
+        }
+        return sizes.get(currentBestFitIndex);
+    }
+
     private void releaseMediaRecorder() {
         if (mediaRecorder != null) {
             mediaRecorder.reset(); // clear recorder configuration
@@ -433,12 +465,17 @@ public class MainActivity extends Activity implements SensorEventListener {
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-        mediaRecorder.setVideoFrameRate(VideoFrameRate);
+        mediaRecorder.setProfile(mProfile);
+
+        //mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+        //mediaRecorder.setVideoFrameRate(VideoFrameRate);
+
         // /*
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+        //mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+        //mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
         // */
+
+
 
         /*
         if(quality == 0)
