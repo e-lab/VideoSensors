@@ -1,18 +1,24 @@
 package com.example.juju.e_labvideoapp;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -22,10 +28,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -50,11 +62,18 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends Activity implements SensorEventListener {
+    private static final String TAG = "MainActivity";
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
@@ -128,8 +147,125 @@ public class MainActivity extends Activity implements SensorEventListener {
         return cameraId;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 111) {
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    System.out.println("Permissions --> " + "Permission Granted: " + permissions[i]);
+
+
+                } else if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    System.out.println("Permissions --> " + "Permission Denied: " + permissions[i]);
+
+                }
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public void onResume() {
         super.onResume();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            List<String> permissions = new ArrayList<String>();
+
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.CAMERA);
+            }
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            }
+
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+
+            final int REQUEST_WRITE_STORAGE = 112;
+            /*
+
+            final boolean has_write_permission = (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+            if (!has_write_permission) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_STORAGE
+                );
+                Toast.makeText(this, "No write permissions", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Write permissions got!", Toast.LENGTH_LONG).show();
+            }
+             */
+
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Permission is not granted
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+                } else {
+                    // No explanation needed; request the permission
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_WRITE_STORAGE);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                // Permission has already been granted
+            }
+
+
+            /*
+            if (checkSelfPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
+            }
+            */
+
+
+            if (!permissions.isEmpty()) {
+                requestPermissions(permissions.toArray(new String[permissions.size()]), 111);
+            }
+
+        }
+
+        /*
+        if (Environment.isExternalStorageManager()) {
+            Uri uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}");
+
+            startActivity(
+                    new Intent(
+                            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                            uri
+                    )
+            );
+
+        }
+        */
+
         if (!checkCameraHardware(myContext)) {
             Toast toast = Toast.makeText(myContext, "Phone doesn't have a camera!", Toast.LENGTH_LONG);
             toast.show();
@@ -196,12 +332,21 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     boolean recording = false;
     OnClickListener captureListener = new OnClickListener() {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onClick(View v) {
 
             if (recording) {
                 // stop recording and release camera
-                mediaRecorder.stop(); // stop the recording
+                //mediaRecorder.stop(); // stop the recording
+
+                try {
+                    mediaRecorder.stop();
+                } catch(RuntimeException stopException) {
+                    // handle cleanup here
+                }
+                mCamera.lock();
+
                 releaseMediaRecorder(); // release the MediaRecorder object
                 Toast.makeText(MainActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
                 recording = false;
@@ -227,6 +372,15 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                 File wallpaperDirectory1 = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/"+timeStampFile);
                 wallpaperDirectory1.mkdirs();
+
+                Camera.Parameters params = mCamera.getParameters();
+
+                params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
+                if ( params.isAutoExposureLockSupported() )  params.setAutoExposureLock( true );
+
+                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                mCamera.setParameters(params);
+
                 if (!prepareMediaRecorder()) {
                     Toast.makeText(MainActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
                     finish();
@@ -236,6 +390,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
+                            //mediaRecorder.prepare();
+                            //Thread.sleep(1000);
                             mediaRecorder.start();
                         } catch (final Exception ex) {
                         }
@@ -243,13 +399,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
                 Toast.makeText(MainActivity.this, "Recording...", Toast.LENGTH_LONG).show();
 
-                Camera.Parameters params = mCamera.getParameters();
-                params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
-                if ( params.isAutoExposureLockSupported() )
-                    params.setAutoExposureLock( true );
-
-                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                mCamera.setParameters(params);
                 //d.beginData();
                 storeData();
                 chrono.setBase(SystemClock.elapsedRealtime());
@@ -272,35 +421,71 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean prepareMediaRecorder() {
 
         mediaRecorder = new MediaRecorder();
 
         mCamera.unlock();
+
         mediaRecorder.setCamera(mCamera);
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+        mediaRecorder.setVideoFrameRate(VideoFrameRate);
+        // /*
+        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+        // */
+
+        /*
         if(quality == 0)
             mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
         else if(quality == 1)
             mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_720P));
         else if(quality == 2)
             mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
+        // */
 
         //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-        mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  + ".mp4");
-        mediaRecorder.setVideoFrameRate(VideoFrameRate);
+        String folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath()+"/elab/" + timeStampFile + "/";
+        String filePath = folderPath + timeStampFile  + ".mp4";
+        File patternDirectory = new File(folderPath);
+        patternDirectory.mkdirs();
+
+        try {
+            ContentValues values = new ContentValues();
+
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, timeStampFile);       //file name
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");        //file extension, will automatically add to file
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/elab/" + timeStampFile + "/");     //end "/" is not mandatory
+
+            Uri uri = getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);      //important!
+
+            mediaRecorder.setOutputFile(getContentResolver().openFileDescriptor(uri, "w").getFileDescriptor());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //mediaRecorder.setMaxDuration(5000);
+
+
 
         try {
             mediaRecorder.prepare();
+            Thread.sleep(1000);
         } catch (IllegalStateException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
             return false;
         } catch (IOException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
             return false;
         }
         return true;
@@ -361,11 +546,34 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public void storeData() {
 
-        String filePath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
+        String folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath() +"/elab/" + timeStampFile + "/";
+        //folderPath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/";
+        //folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath()+"/elab/" + timeStampFile + "/";
+        String filePath = folderPath + timeStampFile  +  ".csv";
+        //String filePath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
+        //filePath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
+        //filePath = Environment.getStorageDirectory(Environment.DIRECTORY_DOCUMENTS) +"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
+
+
+
+        Log.d(TAG, "storeData: filePath=" + filePath);
+        // filePath=/storage/emulated/0/Android/data/com.example.juju.e_labvideoapp/files/Documents/elab/1644598312430/1644598312430.csv
         try {
-            writer = new PrintWriter(filePath);
+            ContentValues values = new ContentValues();
+
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, timeStampFile);       //file name
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "text/csv");        //file extension, will automatically add to file
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/elab/" + timeStampFile + "/");     //end "/" is not mandatory
+
+            Uri uri = getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);      //important!
+            OutputStream outputStream = getContentResolver().openOutputStream(uri);
+
+            FileOutputStream os = (FileOutputStream) outputStream;
+
+            writer = new PrintWriter(os);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

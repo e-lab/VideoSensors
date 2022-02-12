@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/E-labVideoApp.iml" filepath="$PROJECT_DIR$/E-labVideoApp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/VideoSensors.iml" filepath="$PROJECT_DIR$/.idea/modules/VideoSensors.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/VideoSensors.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/VideoSensors.app.iml" />
     </modules>
   </component>
 </project>
-
