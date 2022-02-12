@@ -106,11 +106,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotv = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        //rotv = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        if (rotv == null) {
-            Toast.makeText(myContext, "Rotation sensor not working", Toast.LENGTH_SHORT).show();
-        }
 
         cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
 
@@ -207,19 +203,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             }
 
             final int REQUEST_WRITE_STORAGE = 112;
-            /*
-
-            final boolean has_write_permission = (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-            if (!has_write_permission) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_WRITE_STORAGE
-                );
-                Toast.makeText(this, "No write permissions", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Write permissions got!", Toast.LENGTH_LONG).show();
-            }
-             */
 
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -247,32 +230,12 @@ public class MainActivity extends Activity implements SensorEventListener {
             }
 
 
-            /*
-            if (checkSelfPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                permissions.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
-            }
-            */
-
-
             if (!permissions.isEmpty()) {
                 requestPermissions(permissions.toArray(new String[permissions.size()]), 111);
             }
 
         }
 
-        /*
-        if (Environment.isExternalStorageManager()) {
-            Uri uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}");
-
-            startActivity(
-                    new Intent(
-                            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                            uri
-                    )
-            );
-
-        }
-        */
 
         if (!checkCameraHardware(myContext)) {
             Toast toast = Toast.makeText(myContext, "Phone doesn't have a camera!", Toast.LENGTH_LONG);
@@ -283,9 +246,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             mCamera = Camera.open(findBackFacingCamera());
             mPreview.refreshCamera(mCamera);
         }
-        //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        //sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
 
         sensorManager.registerListener(this, rotv, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -296,8 +256,8 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
 
-                double newlatitude  = location.getLatitude();
-                double newlongitude = location.getLongitude();
+                latitude  = location.getLatitude();
+                longitude = location.getLongitude();
 
                 if(location.hasSpeed()) {
                     speed = location.getSpeed();
@@ -309,15 +269,10 @@ public class MainActivity extends Activity implements SensorEventListener {
                     speed = 0.0f;
                 }
 
-                Log.d(TAG, "onLocationChanged: speed = " + speed);
+                // Log.d(TAG, "onLocationChanged: speed = " + speed);
 
                 oldLocation = location;
 
-                latitude = newlatitude;
-                longitude = newlongitude;
-
-                //speed = location.getSpeed();
-                location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -490,31 +445,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         mediaRecorder.setProfile(mProfile);
 
-        //mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-        //mediaRecorder.setVideoFrameRate(VideoFrameRate);
-
-        // /*
-        //mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-        //mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
-        // */
-
-
-
-        /*
-        if(quality == 0)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
-        else if(quality == 1)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_720P));
-        else if(quality == 2)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
-        // */
-
-        //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-
-        String folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath()+"/elab/" + timeStampFile + "/";
-        String filePath = folderPath + timeStampFile  + ".mp4";
-        File patternDirectory = new File(folderPath);
-        patternDirectory.mkdirs();
 
         try {
             ContentValues values = new ContentValues();
@@ -529,9 +459,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //mediaRecorder.setMaxDuration(5000);
-
-
 
         try {
             mediaRecorder.prepare();
@@ -579,26 +506,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         public void run() {
             lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, locationListener );
-            //longitude = location.getLongitude();
-            //latitude = location.getLatitude();
-            //if(location.hasSpeed()) {
-              //  speed = location.getSpeed();
-            //}
-            //dist[0] = (float) 0.0;
-            /*
-            long elapsedMillis = SystemClock.elapsedRealtime() - chrono.getBase();
-            if(elapsedMillis >= timechecker){
-                clickFlag = 1;
-                timechecker = timechecker + 5000;
-                timer.cancel();
-                timer.purge();
-            }*/
 
-            /*
-            writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                    heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
-            */
             String timeStamp = String.valueOf((new Date()).getTime());
             writer.println(timeStamp + "," +
                            longitude_original + "," + latitude_original + "," +
@@ -611,18 +519,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     @RequiresApi(api = Build.VERSION_CODES.R)
     public void storeData() {
 
-        String folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath() +"/elab/" + timeStampFile + "/";
-        //folderPath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/";
-        //folderPath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath()+"/elab/" + timeStampFile + "/";
-        String filePath = folderPath + timeStampFile  +  ".csv";
-        //String filePath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
-        //filePath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
-        //filePath = Environment.getStorageDirectory(Environment.DIRECTORY_DOCUMENTS) +"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
-
-
-
-        Log.d(TAG, "storeData: filePath=" + filePath);
-        // filePath=/storage/emulated/0/Android/data/com.example.juju.e_labvideoapp/files/Documents/elab/1644598312430/1644598312430.csv
         try {
             ContentValues values = new ContentValues();
 
@@ -640,8 +536,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             e.printStackTrace();
         }
 
-        //writer.println("Longitude" + "," + "Latitude" + "," + "Speed" + "," + "Distance" + "," + "Time" + "," + "Acc X" + "," + "Acc Y" + "," + "Acc Z" + "," + "Heading"
-        //        + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
         writer.println("Timestamp" + "," +
                        "Longitude" + "," + "Latitude" + "," +
                        "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc" + "," +
@@ -653,14 +547,9 @@ public class MainActivity extends Activity implements SensorEventListener {
             latitude_original = original_location.getLatitude();
             longitude_original = original_location.getLongitude();
         }
-        //String setTextText = "Heading: " + heading + " Speed: " + speed;
-        //tv.setText(setTextText);
+
         timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
-        /*if(clickFlag == 1) {
-            capture.performClick();
-        }
-        */
     }
 
     public void enddata() {
@@ -672,9 +561,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorManager;
 
-    //private Sensor accelerometer;
-    //private Sensor head;
-    //private Sensor gyro;
     private Sensor rotv, accelerometer, head, gyro;
 
     // /*
@@ -710,7 +596,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             rotv_w = event.values[3];
             rotv_accuracy = event.values[4];
         }
-        // /*
         if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             linear_acc_x = event.values[0];
             linear_acc_y = event.values[1];
@@ -733,7 +618,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
-        // */
     }
     String[] options = {"1080p","720p","480p"};
     String[] options1 = {"15 Hz","10 Hz"};
