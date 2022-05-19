@@ -269,7 +269,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                     speed = 0.0f;
                 }
 
-                // Log.d(TAG, "onLocationChanged: speed = " + speed);
+                //Log.d(TAG, "onLocationChanged: speed: " + speed);
+                Log.d(TAG, "onLocationChanged: location: (" + location.getLatitude() + "," + location.getLongitude() + ")");
 
                 oldLocation = location;
 
@@ -509,7 +510,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
             String timeStamp = String.valueOf((new Date()).getTime());
             writer.println(timeStamp + "," +
-                           longitude_original + "," + latitude_original + "," +
+                           longitude + "," + latitude + "," +
                            rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy + "," +
                            linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
                            heading + "," + speed);
@@ -543,7 +544,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                         "heading" + "," + "speed");
         LocationManager original = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location original_location = original.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
+        //if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
+        if(original_location != null){
             latitude_original = original_location.getLatitude();
             longitude_original = original_location.getLongitude();
         }
