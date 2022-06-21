@@ -1,18 +1,24 @@
 package com.example.juju.e_labvideoapp;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -22,10 +28,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -50,11 +62,18 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends Activity implements SensorEventListener {
+    private static final String TAG = "MainActivity";
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
@@ -64,6 +83,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Chronometer chrono;
     private TextView tv;
     private TextView txt;
+
+    private CamcorderProfile mProfile;
 
     int quality = 0;
     int rate = 100;
@@ -81,10 +102,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        //accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        //gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        head = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotv = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+
 
         cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
 
@@ -101,11 +123,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         vid = (ImageButton) findViewById(R.id.imageButton);
         vid.setVisibility(View.GONE);
 
-        /*
+        ///*
         tv = (TextView) findViewById(R.id.textViewHeading);
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
-        */
+        //*/
 
 
     }
@@ -128,8 +150,93 @@ public class MainActivity extends Activity implements SensorEventListener {
         return cameraId;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 111) {
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    System.out.println("Permissions --> " + "Permission Granted: " + permissions[i]);
+
+
+                } else if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    System.out.println("Permissions --> " + "Permission Denied: " + permissions[i]);
+
+                }
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    Location oldLocation;
+
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public void onResume() {
         super.onResume();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            List<String> permissions = new ArrayList<String>();
+
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.CAMERA);
+            }
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            }
+
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+
+            final int REQUEST_WRITE_STORAGE = 112;
+
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Permission is not granted
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+                } else {
+                    // No explanation needed; request the permission
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_WRITE_STORAGE);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                // Permission has already been granted
+            }
+
+
+            if (!permissions.isEmpty()) {
+                requestPermissions(permissions.toArray(new String[permissions.size()]), 111);
+            }
+
+        }
+
+
         if (!checkCameraHardware(myContext)) {
             Toast toast = Toast.makeText(myContext, "Phone doesn't have a camera!", Toast.LENGTH_LONG);
             toast.show();
@@ -139,12 +246,11 @@ public class MainActivity extends Activity implements SensorEventListener {
             mCamera = Camera.open(findBackFacingCamera());
             mPreview.refreshCamera(mCamera);
         }
-        //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        //sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
+
         sensorManager.registerListener(this, rotv, SensorManager.SENSOR_DELAY_NORMAL);
-
-
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, head, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
 
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -155,8 +261,19 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                 if(location.hasSpeed()) {
                     speed = location.getSpeed();
+                } else if (oldLocation != null) {
+                    long elapsedTime = location.getTime() - oldLocation.getTime();
+                    float distanceMeters = oldLocation.distanceTo(location);
+                    speed = distanceMeters / elapsedTime;
+                } else {
+                    speed = 0.0f;
                 }
-                location.distanceBetween(latitude_original, longitude_original, latitude, longitude, dist);
+
+                //Log.d(TAG, "onLocationChanged: speed: " + speed);
+                Log.d(TAG, "onLocationChanged: location: (" + location.getLatitude() + "," + location.getLongitude() + ")");
+
+                oldLocation = location;
+
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -170,7 +287,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         LM = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         // Register the listener with the Location Manager to receive location updates
-        LM.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        LM.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
     }
 
     @Override
@@ -196,12 +313,21 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     boolean recording = false;
     OnClickListener captureListener = new OnClickListener() {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onClick(View v) {
 
             if (recording) {
                 // stop recording and release camera
-                mediaRecorder.stop(); // stop the recording
+                //mediaRecorder.stop(); // stop the recording
+
+                try {
+                    mediaRecorder.stop();
+                } catch(RuntimeException stopException) {
+                    // handle cleanup here
+                }
+                mCamera.lock();
+
                 releaseMediaRecorder(); // release the MediaRecorder object
                 Toast.makeText(MainActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
                 recording = false;
@@ -227,6 +353,29 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                 File wallpaperDirectory1 = new File(Environment.getExternalStorageDirectory().getPath()+"/elab/"+timeStampFile);
                 wallpaperDirectory1.mkdirs();
+
+                Camera.Parameters params = mCamera.getParameters();
+
+                params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
+                // if ( params.isAutoExposureLockSupported() )params.setAutoExposureLock( true );
+
+                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+
+                Camera.Size optimalSize = getSafePreviewSize(mCamera.getParameters().getSupportedPreviewSizes(),
+                        mPreview.getWidth(), mPreview.getHeight());
+
+
+                mProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+
+                mProfile.videoFrameWidth = optimalSize.width;
+                mProfile.videoFrameHeight = optimalSize.height;
+
+
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.setPreviewSize(mProfile.videoFrameWidth, mProfile.videoFrameHeight);
+
+                mCamera.setParameters(params);
+
                 if (!prepareMediaRecorder()) {
                     Toast.makeText(MainActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
                     finish();
@@ -236,6 +385,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
+                            //mediaRecorder.prepare();
+                            //Thread.sleep(1000);
                             mediaRecorder.start();
                         } catch (final Exception ex) {
                         }
@@ -243,13 +394,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
                 Toast.makeText(MainActivity.this, "Recording...", Toast.LENGTH_LONG).show();
 
-                Camera.Parameters params = mCamera.getParameters();
-                params.setPreviewFpsRange( 30000, 30000 ); // 30 fps
-                if ( params.isAutoExposureLockSupported() )
-                    params.setAutoExposureLock( true );
-
-                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                mCamera.setParameters(params);
                 //d.beginData();
                 storeData();
                 chrono.setBase(SystemClock.elapsedRealtime());
@@ -263,6 +407,22 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     };
 
+    public static  Camera.Size getSafePreviewSize(List<Camera.Size> sizes,
+                                                  int surfaceWidth, int surfaceHeight) {
+        double minDiff = Double.MAX_VALUE;
+        Integer currentBestFitIndex = 0;
+        int indexCount = 0;
+        for (Camera.Size size : sizes) {
+            double heightDifference = Math.abs(size.height - surfaceHeight);
+            if (heightDifference < minDiff) {
+                currentBestFitIndex = indexCount;
+                minDiff = heightDifference;
+            }
+            indexCount++;
+        }
+        return sizes.get(currentBestFitIndex);
+    }
+
     private void releaseMediaRecorder() {
         if (mediaRecorder != null) {
             mediaRecorder.reset(); // clear recorder configuration
@@ -272,35 +432,48 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean prepareMediaRecorder() {
 
         mediaRecorder = new MediaRecorder();
 
         mCamera.unlock();
+
         mediaRecorder.setCamera(mCamera);
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        if(quality == 0)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
-        else if(quality == 1)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_720P));
-        else if(quality == 2)
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
 
-        //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        mediaRecorder.setProfile(mProfile);
 
-        mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  + ".mp4");
-        mediaRecorder.setVideoFrameRate(VideoFrameRate);
-        //mediaRecorder.setMaxDuration(5000);
+
+        try {
+            ContentValues values = new ContentValues();
+
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, timeStampFile);       //file name
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");        //file extension, will automatically add to file
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/elab/" + timeStampFile + "/");     //end "/" is not mandatory
+
+            Uri uri = getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);      //important!
+
+            mediaRecorder.setOutputFile(getContentResolver().openFileDescriptor(uri, "w").getFileDescriptor());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         try {
             mediaRecorder.prepare();
+            Thread.sleep(1000);
         } catch (IllegalStateException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
             return false;
         } catch (IOException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
             return false;
         }
         return true;
@@ -334,61 +507,51 @@ public class MainActivity extends Activity implements SensorEventListener {
         public void run() {
             lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, locationListener );
-            //longitude = location.getLongitude();
-            //latitude = location.getLatitude();
-            //if(location.hasSpeed()) {
-              //  speed = location.getSpeed();
-            //}
-            //dist[0] = (float) 0.0;
-            /*
-            long elapsedMillis = SystemClock.elapsedRealtime() - chrono.getBase();
-            if(elapsedMillis >= timechecker){
-                clickFlag = 1;
-                timechecker = timechecker + 5000;
-                timer.cancel();
-                timer.purge();
-            }*/
 
-            /*
-            writer.println(longitude_original + "," + latitude_original + "," + speed + "," + dist[0] + "," + timeStamp + "," + linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
-                    heading + "," + gyro_x + "," + gyro_y + "," + gyro_z);
-            */
             String timeStamp = String.valueOf((new Date()).getTime());
             writer.println(timeStamp + "," +
-                           longitude_original + "," + latitude_original + "," +
-                           rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy);
+                           longitude + "," + latitude + "," +
+                           rotv_x + "," + rotv_y + "," + rotv_z + "," + rotv_w + "," + rotv_accuracy + "," +
+                           linear_acc_x + "," + linear_acc_y + "," + linear_acc_z + "," +
+                           heading + "," + speed);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public void storeData() {
 
-        String filePath = Environment.getExternalStorageDirectory().getPath()+"/elab/" + timeStampFile + "/" + timeStampFile  +  ".csv";
         try {
-            writer = new PrintWriter(filePath);
+            ContentValues values = new ContentValues();
+
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, timeStampFile);       //file name
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "text/csv");        //file extension, will automatically add to file
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/elab/" + timeStampFile + "/");     //end "/" is not mandatory
+
+            Uri uri = getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);      //important!
+            OutputStream outputStream = getContentResolver().openOutputStream(uri);
+
+            FileOutputStream os = (FileOutputStream) outputStream;
+
+            writer = new PrintWriter(os);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        //writer.println("Longitude" + "," + "Latitude" + "," + "Speed" + "," + "Distance" + "," + "Time" + "," + "Acc X" + "," + "Acc Y" + "," + "Acc Z" + "," + "Heading"
-        //        + "," + "gyro_x" + "," + "gyro_y" + "," + "gyro_z");
         writer.println("Timestamp" + "," +
                        "Longitude" + "," + "Latitude" + "," +
-                       "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc");
+                       "RotationV X" + "," + "RotationV Y" + "," + "RotationV Z" + "," + "RotationV W" + "," + "RotationV Acc" + "," +
+                "linear_acc_x" + "," + "linear_acc_y" + "," + "linear_acc_z" + "," +
+                        "heading" + "," + "speed");
         LocationManager original = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location original_location = original.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
+        //if(original.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
+        if(original_location != null){
             latitude_original = original_location.getLatitude();
             longitude_original = original_location.getLongitude();
         }
-        //String setTextText = "Heading: " + heading + " Speed: " + speed;
-        //tv.setText(setTextText);
+
         timer = new Timer();
         timer.schedule(new SayHello(), 0, rate);
-        /*if(clickFlag == 1) {
-            capture.performClick();
-        }
-        */
     }
 
     public void enddata() {
@@ -400,12 +563,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorManager;
 
-    //private Sensor accelerometer;
-    //private Sensor head;
-    //private Sensor gyro;
-    private Sensor rotv;
+    private Sensor rotv, accelerometer, head, gyro;
 
-    /*
+    // /*
     float linear_acc_x = 0;
     float linear_acc_y = 0;
     float linear_acc_z = 0;
@@ -415,7 +575,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     float gyro_x = 0;
     float gyro_y = 0;
     float gyro_z = 0;
-    */
+    // */
 
     float rotv_x = 0;
     float rotv_y = 0;
@@ -425,10 +585,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        Log.d(TAG, "onAccuracyChanged: " + String.valueOf(accuracy) + String.valueOf(sensor));
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        //Log.d(TAG, "onSensorChanged: " + String.valueOf(event));
         if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
             rotv_x = event.values[0];
             rotv_y = event.values[1];
@@ -436,7 +598,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             rotv_w = event.values[3];
             rotv_accuracy = event.values[4];
         }
-        /*
         if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             linear_acc_x = event.values[0];
             linear_acc_y = event.values[1];
@@ -459,7 +620,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         String setTextText = "Heading: " + heading + " Speed: " + speed;
         tv.setText(setTextText);
-        */
     }
     String[] options = {"1080p","720p","480p"};
     String[] options1 = {"15 Hz","10 Hz"};
